@@ -12,8 +12,21 @@ export class InputHandler {
         // Track which WASD keys are pressed
         this.keys = { w: false, a: false, s: false, d: false };
 
+        // Space: one attack per press (edge-triggered, avoids key-repeat spam)
+        this.spaceHeld = false;
+        this.attackQueued = false;
+
         // Listen for key down events and mark keys as pressed
         window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.key === ' ') {
+                e.preventDefault();
+                if (!this.spaceHeld) {
+                    this.attackQueued = true;
+                }
+                this.spaceHeld = true;
+                return;
+            }
+
             let key = e.key.toLowerCase();
             if (key in this.keys)
                 this.keys[key] = true;
@@ -21,6 +34,11 @@ export class InputHandler {
 
         // Listen for key up events and mark keys as not pressed
         window.addEventListener('keyup', (e) => {
+            if (e.code === 'Space' || e.key === ' ') {
+                this.spaceHeld = false;
+                return;
+            }
+
             let key = e.key.toLowerCase();
             if (key in this.keys)
                 this.keys[key] = false;
@@ -55,6 +73,13 @@ export class InputHandler {
         }
 
         return force;
+    }
+
+    /** Returns true once per Space press; clears the queue. */
+    consumeAttackPressed() {
+        const q = this.attackQueued;
+        this.attackQueued = false;
+        return q;
     }
 
 }
